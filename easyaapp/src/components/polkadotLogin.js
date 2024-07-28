@@ -1,9 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { web3Enable, web3Accounts } from '@polkadot/extension-dapp';
 import axios from 'axios';
 
 const PolkadotLogin = ({ onLogin }) => {
     const [address, setAddress] = useState(null);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        if (address) {
+            const loginUser = async () => {
+                try {
+                    console.log('Logging in with address:', address);
+                    const response = await axios.post('http://localhost:5001/api/auth/login', {
+                        address: address,
+                    });
+                    console.log('Login response:', response.data);
+                    onLogin(response.data);
+                } catch (error) {
+                    console.error('Error connecting to Polkadot:', error);
+                    if (error.response) {
+                        console.error('Error response data:', error.response.data);
+                    }
+                    setError('Failed to connect to backend. Please try again.');
+                }
+            };
+
+            loginUser();
+        }
+    }, [address, onLogin]);
 
     const connect = async () => {
         try {
@@ -14,22 +38,28 @@ const PolkadotLogin = ({ onLogin }) => {
 
             const accounts = await web3Accounts();
             setAddress(accounts[0].address);
-
-            // Login to backend
-            const response = await axios.post('http://localhost:5001/api/auth/login', {
-                address: accounts[0].address,
-            });
-
-            onLogin(response.data);
         } catch (error) {
-            console.error('Error connecting to Polkadot', error);
+            console.error('Error connecting to Polkadot:', error);
+            setError('Failed to connect to backend. Please try again.');
         }
+    };
+
+    const disconnect = () => {
+        setAddress(null);
+        onLogin(null); // Reset user state in parent component
     };
 
     return (
         <div>
-            <button onClick={connect}>Connect Polkadot Wallet</button>
-            {address && <p>Connected: {address}</p>}
+            {!address ? (
+                <button onClick={connect}>Connect Polkadot Wallet</button>
+            ) : (
+                <div>
+                    <p>Connected: {address}</p>
+                    <button onClick={disconnect}>Disconnect</button>
+                </div>
+            )}
+            {error && <p style={{ color: 'red' }}>{error}</p>}
         </div>
     );
 };

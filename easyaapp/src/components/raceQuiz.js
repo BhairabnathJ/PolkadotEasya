@@ -5,22 +5,24 @@ import './css/raceQuiz.css';
 const RaceQuiz = ({ topic, onRestart, user }) => {
     const [questions, setQuestions] = useState([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [selectedAnswer, setSelectedAnswer] = useState('');
     const [score, setScore] = useState(0);
+    const [showResults, setShowResults] = useState(false);
     const [error, setError] = useState(null);
     const [timeLeft, setTimeLeft] = useState(30);
+    const [timePerQuestion, setTimePerQuestion] = useState([]);
+    const [startTime, setStartTime] = useState(Date.now());
+    const [nftValue, setNftValue] = useState(null);
+    const [txHash, setTxHash] = useState(null);
 
     useEffect(() => {
         const fetchQuestions = async () => {
             try {
                 const response = await axios.get(`http://localhost:5001/api/questions?topic=${topic}`);
                 setQuestions(response.data);
-                setCurrentQuestionIndex(0);
-                setScore(0);
-                setTimeLeft(30);
-                setError(null);
             } catch (error) {
-                setError('Error fetching questions. Please try again later.');
                 console.error('Error fetching questions:', error);
+                setError('Error fetching questions. Please try again later.');
             }
         };
 
@@ -29,42 +31,53 @@ const RaceQuiz = ({ topic, onRestart, user }) => {
 
     useEffect(() => {
         if (timeLeft === 0) {
-            handleNextQuestion();
+            handleAnswer('');
         }
 
-        const timer = timeLeft > 0 && setInterval(() => setTimeLeft(timeLeft - 1), 1000);
+        const timer = setInterval(() => {
+            setTimeLeft((prevTime) => (prevTime > 0 ? prevTime - 1 : 0));
+        }, 1000);
+
         return () => clearInterval(timer);
     }, [timeLeft]);
 
-    const handleAnswerSelect = (answer) => {
-        if (answer === questions[currentQuestionIndex].correct) {
+    const handleAnswer = (answer) => {
+        const endTime = Date.now();
+        const timeTaken = (endTime - startTime) / 1000; // Time taken in seconds
+        setTimePerQuestion([...timePerQuestion, timeTaken]);
+
+        setSelectedAnswer(answer);
+        if (answer === questions[currentQuestionIndex].answer) {
             setScore(score + 1);
         }
 
-        handleNextQuestion();
-    };
-
-    const handleNextQuestion = () => {
-        setTimeLeft(30); // Reset timer
+        setSelectedAnswer('');
+        setTimeLeft(30); // Reset the timer
+        setStartTime(Date.now()); // Reset start time
 
         if (currentQuestionIndex + 1 < questions.length) {
             setCurrentQuestionIndex(currentQuestionIndex + 1);
         } else {
-            // End of quiz
-            saveAttempt();
-            setCurrentQuestionIndex(questions.length);
+            calculateNftValue();
+            setShowResults(true);
         }
     };
 
-    const saveAttempt = async () => {
+    const calculateNftValue = async () => {
+        const totalQuestions = questions.length;
+        const averageTime = timePerQuestion.reduce((a, b) => a + b, 0) / totalQuestions;
+        const accuracy = (score / totalQuestions) * 100;
+
         try {
-            await axios.post('http://localhost:5001/api/quiz/attempt', {
-                address: user.polkadotAddress,
-                topic,
-                score,
+            const response = await axios.post('http://localhost:5001/api/nft/calculate', {
+                averageTime,
+                accuracy,
+                address: user.address,
             });
+            setNftValue(response.data.nftValue);
+            setTxHash(response.data.txHash);
         } catch (error) {
-            console.error('Error saving attempt', error);
+            console.error('Error calculating NFT value:', error);
         }
     };
 
@@ -72,40 +85,54 @@ const RaceQuiz = ({ topic, onRestart, user }) => {
         return <div>{error}</div>;
     }
 
-    if (questions.length === 0) {
-        return <div>Loading...</div>;
-    }
+    if (showResults) {
+        const totalQuestions = questions.length;
+        const averageTime = timePerQuestion.reduce((a, b) => a + b, 0) / totalQuestions;
+        const accuracy = (score / totalQuestions) * 100;
 
-    if (currentQuestionIndex >= questions.length) {
         return (
             <div className="quiz-container">
-                <div>Quiz Complete! Your score: {score}</div>
-                <button onClick={onRestart} className="restart-button">Restart Quiz</button>
+                <h2>Quiz Results</h2>
+                <p>
+                    You scored {score} out of {totalQuestions}
+                </p>
+                <p>Average Time per Question: {averageTime.toFixed(2)} seconds</p>
+                <p>Accuracy: {accuracy.toFixed(2)}%</p>
+                <p>NFT Value: {nftValue}</p>
+                <p>Transaction Hash: {txHash}</p>
+                <button onClick={onRestart}>Restart Quiz</button>
             </div>
         );
+    }
+
+    if (questions.length === 0) {
+        return <div>Loading questions...</div>;
     }
 
     const currentQuestion = questions[currentQuestionIndex];
 
     return (
         <div className="quiz-container">
-            <div className="header">
-                <div className="timer">Time: {timeLeft}s</div>
-                <div className="progress">Question {currentQuestionIndex + 1}/{questions.length}</div>
+            <div className="quiz-header">
+                <div className="timer">Time left: {timeLeft}s</div>
+                <div className="question-counter">
+                    Question {currentQuestionIndex + 1} of {questions.length}
+                </div>
             </div>
-            <div className="question-area">
-                <h2 className="question">{currentQuestion.question}</h2>
-            </div>
-            <div className="answers">
-                {currentQuestion.answers.map((answer, index) => (
-                    <button
-                        key={index}
-                        onClick={() => handleAnswerSelect(answer)}
-                        className="answer-button"
-                    >
-                        {answer}
-                    </button>
-                ))}
+            <div className="question-container">
+                <p>{currentQuestion.question}</p>
+                <div className="options-container">
+                    {currentQuestion.options.map((option, index) => (
+                        <button
+                            key={index}
+                            className={`option-button ${selectedAnswer === option ? 'selected' : ''}`}
+                            onClick={() => handleAnswer(option)}
+                            disabled={selectedAnswer !== ''}
+                        >
+                            {option}
+                        </button>
+                    ))}
+                </div>
             </div>
         </div>
     );
