@@ -5,7 +5,6 @@ import './css/raceQuiz.css';
 const RaceQuiz = () => {
     const [questions, setQuestions] = useState([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [selectedAnswer, setSelectedAnswer] = useState(null);
     const [score, setScore] = useState(0);
     const [error, setError] = useState(null);
 
@@ -24,15 +23,10 @@ const RaceQuiz = () => {
     }, []);
 
     const handleAnswerSelect = (answer) => {
-        setSelectedAnswer(answer);
-    };
-
-    const handleSubmitAnswer = () => {
-        if (selectedAnswer === questions[currentQuestionIndex].correct) {
+        if (answer === questions[currentQuestionIndex].correct) {
             setScore(score + 1);
         }
 
-        setSelectedAnswer(null);
         setCurrentQuestionIndex(currentQuestionIndex + 1);
     };
 
@@ -52,24 +46,24 @@ const RaceQuiz = () => {
 
     return (
         <div className="quiz-container">
-            <h2 className="question">{currentQuestion.question}</h2>
+            <div className="header">
+                <div className="progress">Question {currentQuestionIndex + 1}/{questions.length}</div>
+                <div className="timer">Time: 00:30</div>
+            </div>
+            <div className="question-area">
+                <h2 className="question">{currentQuestion.question}</h2>
+            </div>
             <div className="answers">
                 {currentQuestion.answers.map((answer, index) => (
                     <button
                         key={index}
                         onClick={() => handleAnswerSelect(answer)}
-                        className={`answer-button ${selectedAnswer === answer ? 'selected' : ''}`}
-                        disabled={selectedAnswer !== null}
+                        className="answer-button"
                     >
                         {answer}
                     </button>
                 ))}
             </div>
-            {selectedAnswer && (
-                <button onClick={handleSubmitAnswer} className="submit-button">
-                    Submit Answer
-                </button>
-            )}
         </div>
     );
 };
