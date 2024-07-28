@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './css/raceQuiz.css';
 
-const RaceQuiz = ({ topic, onRestart }) => {
+const RaceQuiz = ({ topic, onRestart, user }) => {
     const [questions, setQuestions] = useState([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [score, setScore] = useState(0);
@@ -51,7 +51,20 @@ const RaceQuiz = ({ topic, onRestart }) => {
             setCurrentQuestionIndex(currentQuestionIndex + 1);
         } else {
             // End of quiz
+            saveAttempt();
             setCurrentQuestionIndex(questions.length);
+        }
+    };
+
+    const saveAttempt = async () => {
+        try {
+            await axios.post('http://localhost:5001/api/quiz/attempt', {
+                address: user.polkadotAddress,
+                topic,
+                score,
+            });
+        } catch (error) {
+            console.error('Error saving attempt', error);
         }
     };
 
