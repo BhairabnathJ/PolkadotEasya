@@ -3,6 +3,7 @@ import axios from 'axios';
 import './css/raceQuiz.css';
 
 const RaceQuiz = ({ topic, onRestart, user }) => {
+    console.log('User:', user); // Add this line to log the user object
     const [questions, setQuestions] = useState([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState('');
@@ -68,11 +69,13 @@ const RaceQuiz = ({ topic, onRestart, user }) => {
         const averageTime = timePerQuestion.reduce((a, b) => a + b, 0) / totalQuestions;
         const accuracy = (score / totalQuestions) * 100;
 
+        console.log('Calculating NFT value with:', { averageTime, accuracy, address: user.address });
+
         try {
             const response = await axios.post('http://localhost:5001/api/nft/calculate', {
                 averageTime,
                 accuracy,
-                address: user.address,
+                address: user.address, // Ensure this is the correct user address
             });
             setNftValue(response.data.nftValue);
             setTxHash(response.data.txHash);

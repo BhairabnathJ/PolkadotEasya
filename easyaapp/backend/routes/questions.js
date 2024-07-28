@@ -53,7 +53,60 @@ const questions = {
             options: ["Conor Daly", "Graham Rahal", "Marco Andretti", "Ryan Hunter-Reay"],
             answer: "Conor Daly"
         }
-    ]
+    ],
+
+    mathi: [
+        {
+            question: "What is the value of Pi to two decimal places?",
+            options: ["3.14", "2.71", "1.61", "1.41"],
+            answer: "3.14"
+        },
+        {
+            question: "What is the square root of 144?",
+            options: ["10", "12", "14", "16"],
+            answer: "12"
+        },
+        {
+            question: "What is 7 multiplied by 8?",
+            options: ["54", "56", "58", "64"],
+            answer: "56"
+        },
+        {
+            question: "What is the perimeter of a square with side length 5?",
+            options: ["10", "15", "20", "25"],
+            answer: "20"
+        },
+        {
+            question: "What is the sum of the angles in a triangle?",
+            options: ["90 degrees", "180 degrees", "270 degrees", "360 degrees"],
+            answer: "180 degrees"
+        },
+        {
+            question: "What is the value of the expression 2^3?",
+            options: ["4", "6", "8", "10"],
+            answer: "8"
+        },
+        {
+            question: "What is the result of 15 divided by 3?",
+            options: ["3", "4", "5", "6"],
+            answer: "5"
+        },
+        {
+            question: "What is the area of a circle with radius 7? (Use π ≈ 3.14)",
+            options: ["154 square units", "48 square units", "98 square units", "44 square units"],
+            answer: "154 square units"
+        },
+        {
+            question: "What is the next prime number after 7?",
+            options: ["9", "11", "13", "15"],
+            answer: "11"
+        },
+        {
+            question: "What is the value of the expression 5 + 3 * 2?",
+            options: ["11", "16", "10", "13"],
+            answer: "11"
+        }
+    ],
 };
 
 router.get('/', (req, res) => {
