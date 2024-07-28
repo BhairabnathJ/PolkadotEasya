@@ -1,23 +1,35 @@
-import logo from './logo.svg';
+import React, { useState } from 'react';
+import RaceQuiz from './components/raceQuiz';
+import TopicSelector from './components/TopicSelector';
+import PolkadotLogin from './components/polkadotLogin';
 import './App.css';
 
 function App() {
+  const [selectedTopic, setSelectedTopic] = useState(null);
+  const [user, setUser] = useState(null);
+
+  const handleSelectTopic = (topic) => {
+    setSelectedTopic(topic);
+  };
+
+  const handleRestart = () => {
+    setSelectedTopic(null);
+  };
+
+  const handleLogin = (user) => {
+    console.log("User logged in:", user); // Debug log
+    setUser(user);
+  };
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      {!user ? (
+        <PolkadotLogin onLogin={handleLogin} />
+      ) : selectedTopic ? (
+        <RaceQuiz topic={selectedTopic} onRestart={handleRestart} user={user} />
+      ) : (
+        <TopicSelector onSelectTopic={handleSelectTopic} />
+      )}
     </div>
   );
 }
